@@ -1,14 +1,8 @@
 import unittest
 import elftasks
-import re
-import numpy
-from io import StringIO
-from collections import deque
-
 
 if __name__ == '__main__':
     unittest.main()
-
 
 
 class TestDay1(unittest.TestCase):

@@ -31,7 +31,6 @@ def match_digits(data):
     matches["nine"] = "9"
 
     nums = []
-
     for l in data:
         nums.append([])
         i = 0
