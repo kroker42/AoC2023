@@ -82,7 +82,7 @@ def parse_hand(hand):
         s = s.strip().split(" ")
         marbles[s[-1]] = int(s[-2])
 
-    return (marbles["red"], marbles["green"], marbles["blue"])
+    return tuple(marbles.values())  # using that dicts are ordered by keys
 
 
 def day2():
