@@ -1,22 +1,7 @@
 import string
 import time
 import re
-from collections import namedtuple
-from collections import deque
-
-from copy import deepcopy
-
-from functools import partial
-
-from operator import add
-from operator import mul
-from operator import sub
-from operator import abs
-from operator import floordiv
-from operator import mod
-
 import numpy
-from numpy import sign
 
 def match_digits(data):
     matches = {str(i): str(i) for i in range(1, 10)}
@@ -42,11 +27,11 @@ def match_digits(data):
                     nums[-1].append(matches[x[0]])
                     new_i = len(x[0])
                     break
-            if new_i <= 1:
-                i += 1
-            else:
-                i += new_i - 2
+            i += 1 if new_i <= 1 else new_i - 2
     return nums
+
+def get_digits(data):
+    return [[x for x in s if x.isdigit()] for s in data]
 
 
 def day1():
@@ -62,4 +47,51 @@ def day1():
 
     return time.time() - start_time, task1, task2
     
+###########
 
+def validate_game(game):
+    bag = (12, 13, 14)
+    num = sum(bag)
+
+    for hand in game:
+        if numpy.greater(hand, bag).any() or sum(hand) > num:
+            return False
+
+    return True
+
+def parse_hand(hand):
+    marbles = dict.fromkeys(["red", "green", "blue"], 0)
+    for s in hand:
+        s = s.split(" ")
+        marbles[s[-1]] = int(s[-2])
+
+    return (marbles["red"], marbles["green"], marbles["blue"])
+
+def min_bag(hand):
+    return numpy.max(hand, axis=0)
+
+
+
+def day2():
+    data = [line.strip().split(":")[-1].split(";") for line in open('input02.txt')]
+
+    start_time = time.time()
+
+    games = []
+    for game in data:
+        games.append([])
+        game = [hand.split(",") for hand in game]
+        for hand in game:
+            games[-1].append(parse_hand(hand))
+
+    valid_games = []
+    for i in range(len(games)):
+        if validate_game(games[i]):
+            valid_games.append(i+1)
+
+
+    task1 = sum(valid_games)
+    task2 = sum([numpy.prod(min_bag(hand)) for hand in games])
+
+    return time.time() - start_time, task1, task2
+    
