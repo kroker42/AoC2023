@@ -59,17 +59,30 @@ def validate_game(game):
 
     return True
 
+def find_valid_games(games):
+    """
+    :param games: all game results
+    :return: list of the 1-index-based ordinals of the valid games
+    """
+    valid_games = []
+    for i in range(len(games)):
+        if validate_game(games[i]):
+            valid_games.append(i+1)
+    return valid_games
+
 def parse_hand(hand):
+    """
+    :param hand: a list containing space-separated strings, with a leading space.
+     Each string contains info on how many marbles of a colour were pulled from the bag;
+    in no specific order. 0-value colours are left out entirely.
+    :return: a tuple representing the number of marbles for (red, green, blue)
+    """
     marbles = dict.fromkeys(["red", "green", "blue"], 0)
     for s in hand:
-        s = s.split(" ")
+        s = s.strip().split(" ")
         marbles[s[-1]] = int(s[-2])
 
     return (marbles["red"], marbles["green"], marbles["blue"])
-
-def min_bag(hand):
-    return numpy.max(hand, axis=0)
-
 
 
 def day2():
@@ -77,21 +90,10 @@ def day2():
 
     start_time = time.time()
 
-    games = []
-    for game in data:
-        games.append([])
-        game = [hand.split(",") for hand in game]
-        for hand in game:
-            games[-1].append(parse_hand(hand))
+    games = [[parse_hand(hand.split(",")) for hand in game] for game in data]
 
-    valid_games = []
-    for i in range(len(games)):
-        if validate_game(games[i]):
-            valid_games.append(i+1)
-
-
-    task1 = sum(valid_games)
-    task2 = sum([numpy.prod(min_bag(hand)) for hand in games])
+    task1 = sum(find_valid_games(games))
+    task2 = sum([numpy.prod(numpy.max(hand, axis=0)) for hand in games])
 
     return time.time() - start_time, task1, task2
     
