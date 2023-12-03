@@ -101,68 +101,105 @@ def day2():
 #####################################
 
 def is_symbol(ch):
+    """
+    The grid contains numbers and symbols. Empty spots are marked by a dot.
+    So symbols are neither numbers nor dots.
+    """
     return not ch.isdigit() and ch != '.'
 
 
-def is_symbol_adjacent(row, cols, grid):
-    row_range = (row - 1 if row > 0 else 0, row + 2 if row < len(grid) - 1 else row + 1)
-    col_range = (cols[0] - 1 if cols[0] > 0 else 0, cols[1] + 1 if cols[1] < len(grid[0]) else cols[1])
+def get_bounding_box(row, col_span, grid_size):
+    """
+    Creates a bounding box for the given row and col span, taking care to not exceed the grid dimensions.
+    The column span is a range, i.e. "736" in position 0 - 2 will have the span = (0,3)
+    """
+    row_range = range(row - 1 if row > 0 else 0, \
+                      row + 2 if row < grid_size[0] - 1 else row + 1)
+    col_range = range(col_span[0] - 1 if col_span[0] > 0 else 0, \
+                      col_span[1] + 1 if col_span[1] < grid_size[1] else col_span[1])
+    return (row_range, col_range)
 
-    for r in range(row_range[0], row_range[1]):
-        for c in range(col_range[0], col_range[1]):
+
+def is_symbol_adjacent(row, cols, grid):
+    """
+    Checks if a number in the grid is next to a symbol, incl. diagonally.
+    A number is identified by its row coordinate and its span over columns.
+    The column span is a range, i.e. "736" in position 0 - 2 will have the span = (0,3)
+    """
+    bounding_box = get_bounding_box(row, cols, (len(grid), len(grid[0])))
+    for r in bounding_box[0]:
+        for c in bounding_box[1]:
             if is_symbol(grid[r][c]):
                 return True
     return False
 
 
 def find_number_matches(grid):
-    matches = []
-    for row in range(len(grid)):
-        matches.append(re.finditer("[0-9]+", grid[row]))
-    return matches
+    """
+    Finds all numbers in the grid, and their coordinates.
+    Numbers are horizontal, so they have 1 row coordinate and span 1 or more columns.
+    The column span is a range, i.e. "736" in position 0 - 2 will have the span = (0,3)
+    """
+    return [re.finditer("[0-9]+", grid[row]) for row in range(len(grid))]
 
 def find_spare_parts(grid):
+    """
+    Spare parts are numbers that are next to a symbol in the grid, incl. diagonally.
+    """
     numbers = []
     matches = find_number_matches(grid)
     for row in range(len(grid)):
         for m in matches[row]:
-            if is_symbol_adjacent(row, m.span(), grid):
-                numbers.append(int(grid[row][m.span()[0]:m.span()[1]]))
+            cols = m.span()
+            if is_symbol_adjacent(row, cols, grid):
+                numbers.append(int(grid[row][cols[0]:cols[1]]))
     return numbers
 
 def find_star_matches(grid):
-    matches = []
-    for row in range(len(grid)):
-        matches.append(re.finditer("\*", grid[row]))
-    return matches
+    """
+    Finds the coordinates of all star symbols in the grid
+    """
+    return [re.finditer("\*", grid[row]) for row in range(len(grid))]
 
 
 def build_number_map(number_matches):
-    number_map = {i:{} for i in range(len(number_matches))}
-    for i in range(len(number_matches)):
-        for m in number_matches[i]:
-            number_map[i][m.span()] = int(m.group(0))
+    """
+    Creates a nested map of the coordinates of numbers in the map.
+    map[row][col_span] = number
+    The col_span is a range, i.e. "736" in position 0 - 2 will have the col_span = (0,3)
+    """
+    number_map = {row: {} for row in range(len(number_matches))}
+    for row in range(len(number_matches)):
+        number_map[row] = {m.span(): int(m.group(0)) for m in number_matches[row]}
     return number_map
 
+def ranges_overlap(r1, r2):
+    """
+    Checks if 2 ranges overlap. Only works if the size of the ranges <= 3
+    """
+    return r1[0] in r2 or r1[1] - 1 in r2
 
 
 def find_gears(grid):
+    """
+    Gears are star symbols adjacent to 2 spare parts.
+    They are identified by the product of the spare part numbers.
+
+    The algo uses that for every number, len(number) <= 3.
+    It creates a bounding box for each star symbol, and checks if the start or end index of
+    the number is inside the bounding box. If bigger numbers were allowed, this wouldn't work.
+    """
     gears = []
     stars = find_star_matches(grid)
-    numbers = find_number_matches(grid)
-    number_map = build_number_map(numbers)
+    numbers = build_number_map(find_number_matches(grid))
+
     for row in range(len(grid)):
         for star_match in stars[row]:
-            cols = star_match.span()
-            row_range = range(row - 1 if row > 0 else 0, row + 2 if row < len(grid) - 1 else row + 1)
-            col_range = range(cols[0] - 1 if cols[0] > 0 else 0, cols[1] + 1 if cols[1] < len(grid[0]) else cols[1])
-
             adjacent_nums = []
 
-            for r in row_range:
-                for n in number_map[r]:
-                    if n[0] in col_range or n[1] - 1 in col_range:
-                        adjacent_nums.append(number_map[r][n])
+            box = get_bounding_box(row, star_match.span(), (len(grid), len(grid[0])))
+            for row in box[0]:
+                adjacent_nums += [numbers[row][cols] for cols in numbers[row] if ranges_overlap(cols, box[1])]
 
             if len(adjacent_nums) > 1:
                 gears.append(numpy.prod(adjacent_nums))
