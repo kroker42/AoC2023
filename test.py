@@ -22,8 +22,7 @@ zoneight234 \
 #####################################
 
 class TestDay3(unittest.TestCase):
-    data = """
-467..114..
+    data = """467..114..
 ...*......
 ..35..633.
 ......#...
@@ -33,5 +32,8 @@ class TestDay3(unittest.TestCase):
 ......755.
 ...$.*....
 .664.598.."""
-    def test_task1(self):
-        self.assertEqual(False, elftasks.day3())
+    def test_task2(self):
+        grid = self.data.split("\n")
+        gears = elftasks.find_gears(grid)
+        self.assertEqual(467835, sum(gears))
+

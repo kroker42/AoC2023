@@ -115,24 +115,69 @@ def is_symbol_adjacent(row, cols, grid):
     return False
 
 
-def find_numbers(grid):
-    numbers = []
+def find_number_matches(grid):
+    matches = []
     for row in range(len(grid)):
-        matches = re.finditer("[0-9]+", grid[row])
-        for m in matches:
+        matches.append(re.finditer("[0-9]+", grid[row]))
+    return matches
+
+def find_spare_parts(grid):
+    numbers = []
+    matches = find_number_matches(grid)
+    for row in range(len(grid)):
+        for m in matches[row]:
             if is_symbol_adjacent(row, m.span(), grid):
                 numbers.append(int(grid[row][m.span()[0]:m.span()[1]]))
     return numbers
+
+def find_star_matches(grid):
+    matches = []
+    for row in range(len(grid)):
+        matches.append(re.finditer("\*", grid[row]))
+    return matches
+
+
+def build_number_map(number_matches):
+    number_map = {i:{} for i in range(len(number_matches))}
+    for i in range(len(number_matches)):
+        for m in number_matches[i]:
+            number_map[i][m.span()] = int(m.group(0))
+    return number_map
+
+
+
+def find_gears(grid):
+    gears = []
+    stars = find_star_matches(grid)
+    numbers = find_number_matches(grid)
+    number_map = build_number_map(numbers)
+    for row in range(len(grid)):
+        for star_match in stars[row]:
+            cols = star_match.span()
+            row_range = range(row - 1 if row > 0 else 0, row + 2 if row < len(grid) - 1 else row + 1)
+            col_range = range(cols[0] - 1 if cols[0] > 0 else 0, cols[1] + 1 if cols[1] < len(grid[0]) else cols[1])
+
+            adjacent_nums = []
+
+            for r in row_range:
+                for n in number_map[r]:
+                    if n[0] in col_range or n[1] - 1 in col_range:
+                        adjacent_nums.append(number_map[r][n])
+
+            if len(adjacent_nums) > 1:
+                gears.append(numpy.prod(adjacent_nums))
+
+    return gears
 
 
 def day3():
     data = [line.strip() for line in open('input03.txt')]
     start_time = time.time()
 
-    numbers = find_numbers(data)
-    print(numbers)
+    numbers = find_spare_parts(data)
     task1 = sum(numbers)
-    task2 = None
+
+    gears = find_gears(data)
+    task2 = sum(gears)
 
     return time.time() - start_time, task1, task2
-    
