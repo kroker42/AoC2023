@@ -97,3 +97,42 @@ def day2():
 
     return time.time() - start_time, task1, task2
     
+
+#####################################
+
+def is_symbol(ch):
+    return not ch.isdigit() and ch != '.'
+
+
+def is_symbol_adjacent(row, cols, grid):
+    row_range = (row - 1 if row > 0 else 0, row + 2 if row < len(grid) - 1 else row + 1)
+    col_range = (cols[0] - 1 if cols[0] > 0 else 0, cols[1] + 1 if cols[1] < len(grid[0]) else cols[1])
+
+    for r in range(row_range[0], row_range[1]):
+        for c in range(col_range[0], col_range[1]):
+            if is_symbol(grid[r][c]):
+                return True
+    return False
+
+
+def find_numbers(grid):
+    numbers = []
+    for row in range(len(grid)):
+        matches = re.finditer("[0-9]+", grid[row])
+        for m in matches:
+            if is_symbol_adjacent(row, m.span(), grid):
+                numbers.append(int(grid[row][m.span()[0]:m.span()[1]]))
+    return numbers
+
+
+def day3():
+    data = [line.strip() for line in open('input03.txt')]
+    start_time = time.time()
+
+    numbers = find_numbers(data)
+    print(numbers)
+    task1 = sum(numbers)
+    task2 = None
+
+    return time.time() - start_time, task1, task2
+    
