@@ -224,22 +224,23 @@ def day3():
 
 
 def day4():
+    """
+    Count wins on scratch cards. A card has a set of winning numbers and a set of numbers.
+    """
     data = [line.strip().split(':') for line in open('input04.txt')]
 
     start_time = time.time()
 
     win_count = []
     for card in data:
-        wins, numbers = card[1].split('|')
-        wins = {int(i) for i in wins.split(' ') if i.isdigit()}
-        numbers = {int(i) for i in numbers.split(' ') if i.isdigit()}
+        [wins, numbers] = [{int(i) for i in x.split(' ') if i.isdigit()} for x in card[1].split('|')]
         win_count.append(len(wins.intersection(numbers)))
 
     points = [2 ** (i - 1) for i in win_count if i > 0]
     task1 = sum(points)
 
-    card_count = {i: 1 for i in range(len(win_count))}
-    for i in range(len(win_count)):
+    card_count = {i: 1 for i in range(len(data))}
+    for i in range(len(card_count)):
         for win in range(1, win_count[i] + 1):
             card_count[i+win] += card_count[i]
 
