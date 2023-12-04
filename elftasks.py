@@ -218,3 +218,33 @@ def day3():
     task2 = sum(gears)
 
     return time.time() - start_time, task1, task2
+
+
+##############
+
+
+def day4():
+    data = [line.strip().split(':') for line in open('input04.txt')]
+
+    start_time = time.time()
+
+    win_count = []
+    for card in data:
+        wins, numbers = card[1].split('|')
+        wins = {int(i) for i in wins.split(' ') if i.isdigit()}
+        numbers = {int(i) for i in numbers.split(' ') if i.isdigit()}
+        win_count.append(len(wins.intersection(numbers)))
+
+    points = [2 ** (i - 1) for i in win_count if i > 0]
+    task1 = sum(points)
+
+    card_count = {i: 1 for i in range(len(win_count))}
+    for i in range(len(win_count)):
+        for win in range(1, win_count[i] + 1):
+            card_count[i+win] += card_count[i]
+
+    task2 = sum(card_count.values())
+
+    return time.time() - start_time, task1, task2
+    
+
