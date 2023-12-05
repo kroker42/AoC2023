@@ -227,13 +227,13 @@ def day4():
     """
     Count wins on scratch cards. A card has a set of winning numbers and a set of numbers.
     """
-    data = [line.strip().split(':') for line in open('input04.txt')]
+    data = [line.strip().split(':')[-1] for line in open('input04.txt')]
 
     start_time = time.time()
 
     win_count = []
     for card in data:
-        [wins, numbers] = [{int(i) for i in x.split(' ') if i.isdigit()} for x in card[1].split('|')]
+        [wins, numbers] = [{int(i) for i in x.split(' ') if i.isdigit()} for x in card.split('|')]
         win_count.append(len(wins.intersection(numbers)))
 
     points = [2 ** (i - 1) for i in win_count if i > 0]
@@ -247,5 +247,96 @@ def day4():
     task2 = sum(card_count.values())
 
     return time.time() - start_time, task1, task2
-    
 
+##############
+
+def parse_seeds(s):
+    data = s.split(':')
+    return [int(x) for x in data[-1].strip().split(' ')]
+
+def parse_map(data, start):
+    i = start
+    result = {}
+    while data[i]:
+        val, key, length = [int(x) for x in data[i].strip().split(' ')]
+        result[range(key, key + length)] = val
+        i += 1
+    return i, result
+
+def parse_dest_maps(data):
+    maps = [''] * 7
+    next_i = 1
+    for i in range(7):
+        next_i, maps[i] = parse_map(data, next_i + 2)
+    return maps
+
+
+def parse_seed_ranges(seeds):
+    return [range(seeds[i], seeds[i] + seeds[i + 1]) for i in range(0, len(seeds) - 1, 2)]
+
+def get_next_destinations(sources, dest_map):
+    destinations = []
+    for source in sources:
+        dest = source
+        for key in dest_map.keys():
+            if source in key:
+                dest = dest_map[key] + (source - key.start)
+        destinations.append(dest)
+    return destinations
+
+
+def get_next_destination_ranges(source_ranges, dest_map):
+    destinations = []
+    sources = source_ranges.copy()
+    for source in sources:
+        found = False
+        for key in dest_map.keys():
+            if source.start in key:
+                dest = dest_map[key] + (source.start - key.start)
+                stop = min(key.stop, source.stop)
+                destinations.append(range(dest, dest + (stop - source.start)))
+                if source.stop > key.stop:
+                    sources.append(range(key.stop, source.stop))
+                found = True
+                break
+            elif key.start in source:
+                dest = dest_map[key]
+                stop = min(key.stop, source.stop)
+                destinations.append(range(dest, dest + (stop - key.start)))
+                if source.start < key.start:
+                    sources.append(range(source.start, key.start))
+                if key.stop < source.stop:
+                    sources.append(range(key.stop, source.stop))
+                found = True
+                break
+        if not found:
+            destinations.append(source)
+
+    return destinations
+
+
+def day5():
+    inp = open('input05.txt')
+    data = inp.read()
+    inp.close()
+    data = data.split('\n')
+
+    start_time = time.time()
+
+    seeds = parse_seeds(data[0])
+    maps = parse_dest_maps(data)
+
+    destinations = seeds
+    for dest_map in maps:
+        destinations = get_next_destinations(destinations, dest_map)
+
+    task1 = min(destinations)
+
+    dest_ranges = parse_seed_ranges(seeds)
+    for dest_map in maps:
+        dest_ranges = get_next_destination_ranges(dest_ranges, dest_map)
+
+    task2 = min([r.start for r in dest_ranges])
+
+    return time.time() - start_time, task1, task2
+    
