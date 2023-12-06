@@ -78,8 +78,12 @@ humidity-to-location map:
 56 93 4
 
 """
-    def test_seeds(self):
-        self.assertEqual([79, 14, 55, 13], elftasks.parse_seeds("seeds: 79 14 55 13"))
+    def test_seed_parsing(self):
+        seeds = elftasks.parse_seeds("seeds: 79 14 55 13")
+        self.assertEqual([79, 14, 55, 13], seeds)
+
+        seed_ranges = elftasks.parse_seed_ranges(seeds)
+        self.assertEqual([range(79, 93), range(55, 68)], seed_ranges)
 
     def test_source_dest_map(self):
         data = ["50 98 2", "52 50 48", '']
@@ -87,23 +91,10 @@ humidity-to-location map:
             range(98, 100): 50,
             range(50, 98): 52
         }
-        self.assertEqual((2, destinations), elftasks.parse_map(data, 0))
+        self.assertEqual((2, destinations), elftasks.parse_dest_map(data, 0))
 
         sources = [79, 14, 55, 13]
         self.assertEqual([81, 14, 57, 13], elftasks.get_next_destinations(sources, destinations))
-
-    def test_part2(self):
-        inp = open('day05tst.txt')
-        data = inp.read()
-        inp.close()
-        data = data.split('\n')
-
-        seeds = elftasks.parse_seeds(data[0])
-        seed_ranges = elftasks.parse_seed_ranges(seeds)
-        self.assertEqual([range(79, 93), range(55, 68)], seed_ranges)
-
-        dest_maps = elftasks.parse_dest_maps(data)
-        dest_ranges = elftasks.get_next_destination_ranges(seed_ranges, dest_maps[0])
 
 
 

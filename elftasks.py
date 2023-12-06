@@ -254,20 +254,25 @@ def parse_seeds(s):
     data = s.split(':')
     return [int(x) for x in data[-1].strip().split(' ')]
 
-def parse_map(data, start):
+def parse_dest_map(data, start):
     i = start
     result = {}
-    while data[i]:
+    while data[i]:  # map data ends with an empty line
         val, key, length = [int(x) for x in data[i].strip().split(' ')]
         result[range(key, key + length)] = val
         i += 1
     return i, result
 
 def parse_dest_maps(data):
+    """
+    Input contains mapping information for a 7-long chain of locations for the seeds.
+    The maps are separated by a blank line, and preceded by a description line.
+    The first line of data contain seed info and not a map, so we start parsing at line 3.
+    """
     maps = [''] * 7
     next_i = 1
     for i in range(7):
-        next_i, maps[i] = parse_map(data, next_i + 2)
+        next_i, maps[i] = parse_dest_map(data, next_i + 2)
     return maps
 
 
@@ -291,25 +296,28 @@ def get_next_destination_ranges(source_ranges, dest_map):
     for source in sources:
         found = False
         for key in dest_map.keys():
-            if source.start in key:
+            if source.start in key:  # dest range contains start of source range
                 dest = dest_map[key] + (source.start - key.start)
                 stop = min(key.stop, source.stop)
                 destinations.append(range(dest, dest + (stop - source.start)))
-                if source.stop > key.stop:
-                    sources.append(range(key.stop, source.stop))
+
+                if key.stop < source.stop:  # source range continues past end of key range
+                    sources.append(range(key.stop, source.stop))  # check the end of the source range
                 found = True
                 break
-            elif key.start in source:
+            elif key.start in source:  # key range contains middle or end of source range
                 dest = dest_map[key]
                 stop = min(key.stop, source.stop)
                 destinations.append(range(dest, dest + (stop - key.start)))
-                if source.start < key.start:
-                    sources.append(range(source.start, key.start))
-                if key.stop < source.stop:
+
+                # check the start of the source range
+                sources.append(range(source.start, key.start))
+
+                if key.stop < source.stop:  # source range contains key range, check end of source range
                     sources.append(range(key.stop, source.stop))
                 found = True
                 break
-        if not found:
+        if not found:  # if there's no mapping, dest range == source range
             destinations.append(source)
 
     return destinations
