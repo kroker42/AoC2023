@@ -97,5 +97,11 @@ humidity-to-location map:
         self.assertEqual([81, 14, 57, 13], elftasks.get_next_destinations(sources, destinations))
 
 
+###############
+
+
+class TestDay7(unittest.TestCase):
+    def test_task1(self):
+        self.assertEqual(False, False)
 
 

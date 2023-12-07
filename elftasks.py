@@ -2,6 +2,8 @@ import string
 import time
 import re
 import numpy
+import math
+import operator
 
 def match_digits(data):
     matches = {str(i): str(i) for i in range(1, 10)}
@@ -347,4 +349,140 @@ def day5():
     task2 = min([r.start for r in dest_ranges])
 
     return time.time() - start_time, task1, task2
+
+##############
+
+
+def day6():
+    data = [line.strip().split(':')[-1].split(' ') for line in open('input06.txt')]
+
+    start_time = time.time()
+
+    times, distances = [[int(x) for x in line if x.isdigit()] for line in data]
+    races = zip(times, distances)
+
+    options = []
+    for race in races:
+        wins = []
+        for t in range(race[0]):
+            dist = (race[0] - t) * t
+            if dist > race[1]:
+                wins.append(dist)
+        options.append(len(wins))
+
+    task1 = math.prod(options)
+
+    race_time, distance = [int("".join([x for x in line if x])) for line in data]
+
+    x = 0
+    while (race_time - x) * x < distance:
+        x += 1
+
+    y = race_time
+    while (race_time - y) * y < distance:
+        y -= 1
+
+    task2 = y - x + 1
+
+    return time.time() - start_time, task1, task2
+
+##############
+
+def parse_hand(hand):
+    card_vals = {'A': 14, 'K': 13, 'Q': 12, 'J': 11, 'T': 10}
+    return [card_vals[card] if card in card_vals else int(card) for card in hand]
+
+def score_hand(hand):
+    counts = {}
+    for card in hand:
+        counts[card] = counts[card] + 1 if card in counts else 1
+
+    unique_cards = len(counts)
+
+    if unique_cards == 5:  # all different cards
+        return 1
+    elif unique_cards == 4:  # one pair
+        return 2
+    elif unique_cards == 3:  # 3 of a kind or 2 pair
+        if max(counts.values()) == 3:
+            return 4
+        else:
+            return 3
+    elif unique_cards == 2:  # 4 of a kind or full house
+        if max(counts.values()) == 4:
+            return 6
+        else:
+            return 5
+    elif unique_cards == 1:  # 5 of a kind
+        return 7
+
+def parse_joker_hand(hand):
+    card_vals = {'A': 14, 'K': 13, 'Q': 12, 'J': 1, 'T': 10}
+    return [card_vals[card] if card in card_vals else int(card) for card in hand]
+
+def score_joker_hand(hand, score):
+    j_count = hand.count(1)
+    if j_count == 1:
+        if score in [1, 5, 6]:
+            return score + 1
+        elif score in [2, 3, 4]:
+            return score + 2
+        else:
+            raise ValueError
+    elif j_count == 2:
+        # 2 --> 1 pair --> 3 of a kind --> 4
+        if score in [2, 5]:
+            return score + 2
+        elif score == 3:  # 2 pair --> 4 of a kind
+            return 6
+        else:
+            raise ValueError
+    elif j_count == 3:
+        if score in [4, 5]:
+            return score + 2
+        else:
+            raise ValueError
+    elif j_count >= 4:
+        return 7
+    else:
+        return score
+
+
+def day7():
+    data = [line.strip().split(" ") for line in open('input07.txt')]
+
+    start_time = time.time()
+
+    hands = [(parse_hand(player[0]), int(player[1])) for player in data]
+
+    scores = {i: [] for i in range(1, 8)}
+    for hand in hands:
+        scores[score_hand(hand[0])].append(hand)
+
+    multiplier = 1
+    task1 = 0
+    for score in scores.values():
+        score.sort(key=operator.itemgetter(0))  # ascending lexicographical sort of hand
+        for hand in score:
+            task1 += multiplier * hand[1]
+            multiplier += 1
+
+    joker_hands = [(parse_joker_hand(player[0]), int(player[1])) for player in data]
+
+    joker_scores = {i: [] for i in range(1, 8)}
+    for hand in joker_hands:
+        joker_scores[score_joker_hand(hand[0], score_hand(hand[0]))].append(hand)
+
+    multiplier = 1
+    task2 = 0
+    for score in joker_scores.values():
+        score.sort(key=operator.itemgetter(0))  # ascending lexicographical sort of hand
+        for hand in score:
+            task2 += multiplier * hand[1]
+            multiplier += 1
+
+    return time.time() - start_time, task1, task2
     
+
+
+
