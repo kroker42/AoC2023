@@ -4,6 +4,8 @@ import re
 import numpy
 import math
 import operator
+import sympy
+
 
 def match_digits(data):
     matches = {str(i): str(i) for i in range(1, 10)}
@@ -420,7 +422,8 @@ def parse_joker_hand(hand):
     card_vals = {'A': 14, 'K': 13, 'Q': 12, 'J': 1, 'T': 10}
     return [card_vals[card] if card in card_vals else int(card) for card in hand]
 
-def score_joker_hand(hand, score):
+def score_joker_hand(hand):
+    score = score_hand(hand)
     j_count = hand.count(1)
     if j_count == 1:
         if score in [1, 5, 6]:
@@ -471,7 +474,7 @@ def day7():
 
     joker_scores = {i: [] for i in range(1, 8)}
     for hand in joker_hands:
-        joker_scores[score_joker_hand(hand[0], score_hand(hand[0]))].append(hand)
+        joker_scores[score_joker_hand(hand[0])].append(hand)
 
     multiplier = 1
     task2 = 0
@@ -482,7 +485,60 @@ def day7():
             multiplier += 1
 
     return time.time() - start_time, task1, task2
+
+##############
+
+def parse_desert_map(data):
+    """JKT = (KFV, CFQ)"""
+    return data[0:3], data[7:10], data[12:15]
+
+def locs_at_Z(locs):
+    for loc in locs:
+        if loc[-1] != 'Z':
+            return False
+    return True
+
+def find_cycle(start, path, desert_map):
+    step = 0
+    loc = start
+    path_len = len(path)
+    while True:
+        if loc[-1] == 'Z':
+            return (loc, step)
+        loc = desert_map[loc][0] if path[step % path_len] == 'L' else desert_map[loc][1]
+        step += 1
+
+
+def day8():
+    data = [line.strip() for line in open('input08.txt')]
+
+    start_time = time.time()
+
+    path = data[0]
+    desert_map = {}
+    for instr in data[2:]:
+        key, left, right = parse_desert_map(instr)
+        desert_map[key] = (left, right)
+
+    path_len = len(path)
+
+    loc = 'AAA'
+    step = 0
+    while loc != 'ZZZ':
+        loc = desert_map[loc][0] if path[step % path_len] == 'L' else desert_map[loc][1]
+        step += 1
+
+    task1 = step
+
+    locs = [loc for loc in desert_map if loc[-1] == 'A']
+    cycles = [find_cycle(loc, path, desert_map) for loc in locs]
+    # examining the cycles, we discover that they are all == a prime number * path_len
+    prime_factors = [cycle[1] // path_len for cycle in cycles]
+    task2 = math.prod(prime_factors) * path_len
+
+    return time.time() - start_time, task1, task2
     
+
 
 
 
