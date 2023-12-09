@@ -516,6 +516,44 @@ def day8():
     return time.time() - start_time, task1, task2
     
 
+##############
+
+def calc_diffs(reading):
+    return [j - i for i, j in zip(reading[:-1], reading[1:])]
 
 
+def calc_diff_tree(reading):
+    diffs = [reading]
+    while 1 < len(diffs[-1]) != diffs[-1].count(0):
+        diffs.append(calc_diffs(diffs[-1]))
 
+    return diffs
+
+
+def calc_next_value(diff_tree):
+    next_value = 0
+    for diffs in reversed(diff_tree[:-1]):
+        next_value += diffs[-1]
+
+    return next_value
+
+
+def calc_prev_value(diff_tree):
+    prev_value = 0
+    for diffs in reversed(diff_tree[:-1]):
+        prev_value = diffs[0] - prev_value
+
+    return prev_value
+
+
+def day9():
+    data = [[int(x) for x in line.strip().split(" ")] for line in open('input09.txt')]
+    start_time = time.time()
+
+    diff_trees = [calc_diff_tree(reading) for reading in data]
+
+    task1 = sum([calc_next_value(diff_tree) for diff_tree in diff_trees])
+    task2 = sum([calc_prev_value(diff_tree) for diff_tree in diff_trees])
+
+    return time.time() - start_time, task1, task2
+    

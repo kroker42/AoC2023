@@ -95,3 +95,25 @@ humidity-to-location map:
 
         sources = [79, 14, 55, 13]
         self.assertEqual([81, 14, 57, 13], elftasks.get_next_destinations(sources, destinations))
+
+
+###############
+
+
+class TestDay9(unittest.TestCase):
+    data = """0 3 6 9 12 15
+    1 3 6 10 15 21
+    10 13 16 21 30 45"""
+    data = [[int(x) for x in line.strip().split(" ")] for line in data.split("\n")]
+
+    def test_calc_diffs(self):
+        self.assertEqual([[3 * i for i in range(6)], [3] * 5, [0] * 4], elftasks.calc_diff_tree(self.data[0]))
+
+    def test_calc_next_value(self):
+        diff_tree = elftasks.calc_diff_tree(self.data[0])
+        self.assertEqual(18, elftasks.calc_next_value(diff_tree))
+
+    def test_calc_negative_diffs(self):
+        data = "7 1 -5 0 28 99 260 616 1373 2893 5761 10864 19482 33391 54978 87368 134563 201593 294679 421408 590920"
+        data = [int(x) for x in data.split(" ")]
+        self.assertEqual([0] * 14, elftasks.calc_diff_tree(data)[-1])
