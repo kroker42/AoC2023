@@ -399,24 +399,9 @@ def score_hand(hand):
     for card in hand:
         counts[card] = counts[card] + 1 if card in counts else 1
 
-    unique_cards = len(counts)
-
-    if unique_cards == 5:  # all different cards
-        return 1
-    elif unique_cards == 4:  # one pair
-        return 2
-    elif unique_cards == 3:  # 3 of a kind or 2 pair
-        if max(counts.values()) == 3:
-            return 4
-        else:
-            return 3
-    elif unique_cards == 2:  # 4 of a kind or full house
-        if max(counts.values()) == 4:
-            return 6
-        else:
-            return 5
-    elif unique_cards == 1:  # 5 of a kind
-        return 7
+    unique_cards = list(counts.values())
+    unique_cards.sort(reverse=True)
+    return unique_cards
 
 def parse_joker_hand(hand):
     card_vals = {'A': 14, 'K': 13, 'Q': 12, 'J': 1, 'T': 10}
@@ -424,31 +409,15 @@ def parse_joker_hand(hand):
 
 def score_joker_hand(hand):
     score = score_hand(hand)
-    j_count = hand.count(1)
-    if j_count == 1:
-        if score in [1, 5, 6]:
-            return score + 1
-        elif score in [2, 3, 4]:
-            return score + 2
-        else:
-            raise ValueError
-    elif j_count == 2:
-        # 2 --> 1 pair --> 3 of a kind --> 4
-        if score in [2, 5]:
-            return score + 2
-        elif score == 3:  # 2 pair --> 4 of a kind
-            return 6
-        else:
-            raise ValueError
-    elif j_count == 3:
-        if score in [4, 5]:
-            return score + 2
-        else:
-            raise ValueError
-    elif j_count >= 4:
-        return 7
+    joker_count = hand.count(1)
+    joker_score = []
+    if joker_count == 5:
+        joker_score = score
     else:
-        return score
+        score.remove(joker_count)
+        joker_score = [score[0] + joker_count] + score[1:]
+
+    return joker_score
 
 
 def day7():
@@ -458,9 +427,13 @@ def day7():
 
     hands = [(parse_hand(player[0]), int(player[1])) for player in data]
 
-    scores = {i: [] for i in range(1, 8)}
+    scores = {}
     for hand in hands:
-        scores[score_hand(hand[0])].append(hand)
+        score = score_hand(hand[0])
+        if score in scores:
+            scores[score].append(hand)
+        else:
+            scores[score] = [hand]
 
     multiplier = 1
     task1 = 0
@@ -472,9 +445,13 @@ def day7():
 
     joker_hands = [(parse_joker_hand(player[0]), int(player[1])) for player in data]
 
-    joker_scores = {i: [] for i in range(1, 8)}
+    joker_scores = {}
     for hand in joker_hands:
-        joker_scores[score_joker_hand(hand[0])].append(hand)
+        score = score_joker_hand(hand[0])
+        if score in scores:
+            joker_scores[score].append(hand)
+        else:
+            joker_scores[score] = [hand]
 
     multiplier = 1
     task2 = 0
