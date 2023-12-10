@@ -1,10 +1,8 @@
-import string
 import time
 import re
 import numpy
 import math
 import operator
-import sympy
 
 
 def match_digits(data):
@@ -554,6 +552,120 @@ def day9():
 
     task1 = sum([calc_next_value(diff_tree) for diff_tree in diff_trees])
     task2 = sum([calc_prev_value(diff_tree) for diff_tree in diff_trees])
+
+    return time.time() - start_time, task1, task2
+
+##############
+
+def find_start(pipe_map):
+    for row in range(len(pipe_map)):
+        for col in range(len(pipe_map[0])):
+            if pipe_map[row][col] == 'S':
+                return row, col
+
+
+def valid_coords(point, pipe_map):
+    return min(point) >= 0 and point[0] < len(pipe_map) and point[1] < len(pipe_map[0])
+
+
+def pipe_is_connected(point, direction, pipe_map):
+    compass = {(0, -1): ['-', 'F', 'L'], (0, 1): ['-', 'J', '7'], (-1, 0): ['|', 'F', '7'], (1, 0): ['|', 'L', 'J']}
+    n_c = numpy.add(point, direction)
+    return pipe_map[n_c[0]][n_c[1]] in compass[direction]
+
+def find_connected_neighbours(point, pipe_map):
+    compass = {(0, -1): ['-', 'F', 'L'], (0, 1): ['-', 'J', '7'], (-1, 0): ['|', 'F', '7'], (1, 0): ['|', 'L', 'J']}
+
+    neighbours = []
+    for n in compass:
+        n_c = numpy.add(point, n)
+        if valid_coords(n_c, pipe_map) and pipe_map[n_c[0]][n_c[1]] in compass[n]:
+            neighbours.append(tuple(n_c))
+    return neighbours
+
+
+def find_loop(start, pipe_map):
+    distances = {start: 0}
+    pipes = [start]
+
+    while len(pipes):
+        current = pipes.pop(0)
+        neighbours = find_connected_neighbours(current, pipe_map)
+        for neighbour in neighbours:
+            if neighbour not in distances:
+                distances[neighbour] = distances[current] + 1
+                pipes.append(neighbour)
+
+    return distances
+
+
+def is_vertical_kinked_edge(row, col, pipe_map, polygon_points):
+    """
+    The special case when a vertical edge goes up(down), turns right for a bit, then continues up(down) -
+    that's essentially the same vertical edge, and counts as on continuous edge (with a horizontal kink).
+    E.g. 'F--J' counts as one edge, or 'L-7'
+    """
+    corner = pipe_map[row][col]
+
+    if corner in ['F', 'L']:
+        while True:
+            col += 1
+            print(row,col)
+            if pipe_map[row][col] != '-':
+                break
+        return (corner == 'F' and pipe_map[row][col] == 'J') or (corner == 'L' and pipe_map[row][col] == '7')
+
+    return False
+
+
+def ray_cast(pipe_map, polygon_points):
+    """
+    Finding all points inside a polygon can be solved by casting a ray through the polygon.
+    All points encountered before the first edge are outside the polygon. All points before the next edge are inside,
+    then outside to the next edge, then inside to the next edge, etc.
+
+    This problem is simplified because all corners are 90 degree angles, so all edges are vertical or horizontal.
+    It means we only need to cast rays e.g. horizontally, and only take into account vertical edges.
+
+    Any points on edges are a special case and considered outside.
+    Since horizontal edges count as outside, they (incl. corners) don't affect a ray shone along it -
+    points to left of the horizontal edge and to the right of it are all on the outside.
+
+    Except for the special case when a vertical edge goes up(down), turns right for a bit, then continues up(down) -
+    that's essentially the same vertical edge, and counts as on continuous edge (with a horizontal kink).
+    E.g. 'F--J' counts as one edge, or 'L-7'
+
+    So we find all vertical edges, excl. their start and stop corner, shine horizontal rays through them
+    from left to right, and count any points that are between pairs of vertical edges.
+
+    Vertical edges are marked by a '|' symbol in the matrix, and are included as keys in the distance map -
+    we can either trace through the whole polygon shape again and find them, or just find all in the matrix and
+    check if they're included as keys in the distance map from task 1.
+    """
+    inside = 0
+    for row in range(len(pipe_map)):
+        edge_count = 0
+        for col in range(len(pipe_map[0])):
+            if (row, col) not in polygon_points:
+                inside += edge_count % 2  # only count points between an edge pait, i.e. we've seen an uneven no. of edges
+            elif pipe_map[row][col] == '|' or is_vertical_kinked_edge(row, col, pipe_map, polygon_points):
+                edge_count += 1  # if it's on the polygon edge and a vertical edge - count it
+
+    return inside
+
+
+
+def day10():
+    pipe_map = [line.strip() for line in open('input10.txt')]
+    start_time = time.time()
+
+    map_dims = (len(pipe_map), len(pipe_map[0]))
+
+    start = find_start(pipe_map)
+    distances = find_loop(start, pipe_map)
+    task1 = max(distances.values())
+
+    task2 = ray_cast(pipe_map, distances)
 
     return time.time() - start_time, task1, task2
     
