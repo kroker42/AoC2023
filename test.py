@@ -1,5 +1,6 @@
 import unittest
 import elftasks
+import numpy
 
 if __name__ == '__main__':
     unittest.main()
@@ -117,3 +118,49 @@ class TestDay9(unittest.TestCase):
         data = "7 1 -5 0 28 99 260 616 1373 2893 5761 10864 19482 33391 54978 87368 134563 201593 294679 421408 590920"
         data = [int(x) for x in data.split(" ")]
         self.assertEqual([0] * 14, elftasks.calc_diff_tree(data)[-1])
+
+
+###############
+
+
+class TestDay10(unittest.TestCase):
+    def test_valid_point(self):
+        data = """.....
+.S-7.
+.|.|.
+.L-J.
+....."""
+        pipe_map = data.split('\n')
+        self.assertEqual(True, elftasks.valid_coords((1,1), pipe_map))
+        self.assertEqual(True, elftasks.valid_coords((1,1), pipe_map))
+        self.assertEqual(True, elftasks.valid_coords((1,4), pipe_map))
+        self.assertEqual(False, elftasks.valid_coords((-1,1), pipe_map))
+        self.assertEqual(False, elftasks.valid_coords((5,1), pipe_map))
+
+    def test_task1(self):
+        data = """.....
+.S-7.
+.|.|.
+.L-J.
+....."""
+        pipe_map = data.split('\n')
+        start = elftasks.find_start(pipe_map)
+        distances = elftasks.find_loop(start, pipe_map)
+        self.assertEqual(4, max(distances.values()))
+
+    def test_ray_cast(self):
+        data = """FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L"""
+        pipe_map = data.split('\n')
+        start = elftasks.find_start(pipe_map)
+        distances = elftasks.find_loop(start, pipe_map)
+        self.assertEqual(10, elftasks.ray_cast(pipe_map, distances))
+

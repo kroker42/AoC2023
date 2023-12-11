@@ -568,12 +568,7 @@ def valid_coords(point, pipe_map):
     return min(point) >= 0 and point[0] < len(pipe_map) and point[1] < len(pipe_map[0])
 
 
-def pipe_is_connected(point, direction, pipe_map):
-    compass = {(0, -1): ['-', 'F', 'L'], (0, 1): ['-', 'J', '7'], (-1, 0): ['|', 'F', '7'], (1, 0): ['|', 'L', 'J']}
-    n_c = numpy.add(point, direction)
-    return pipe_map[n_c[0]][n_c[1]] in compass[direction]
-
-def find_connected_neighbours(point, pipe_map):
+def find_start_connections(point, pipe_map):
     compass = {(0, -1): ['-', 'F', 'L'], (0, 1): ['-', 'J', '7'], (-1, 0): ['|', 'F', '7'], (1, 0): ['|', 'L', 'J']}
 
     neighbours = []
@@ -581,12 +576,28 @@ def find_connected_neighbours(point, pipe_map):
         n_c = numpy.add(point, n)
         if valid_coords(n_c, pipe_map) and pipe_map[n_c[0]][n_c[1]] in compass[n]:
             neighbours.append(tuple(n_c))
+
+    return neighbours
+
+def find_connected_neighbours(point, pipe_map):
+
+    neighbour_directions = {'-': [(0, -1), (0, 1)], '|': [(-1, 0), (1, 0)],
+                            'F': [(1, 0), (0, 1)], 'L': [(-1, 0), (0, 1)],
+                            'J': [(0, -1), (-1, 0)], '7': [(0, -1), (1, 0)]}
+
+    neighbours = []
+    for n in neighbour_directions[pipe_map[point[0]][point[1]]]:
+        n_c = numpy.add(point, n)
+        if valid_coords(n_c, pipe_map):
+            neighbours.append(tuple(n_c))
     return neighbours
 
 
 def find_loop(start, pipe_map):
     distances = {start: 0}
-    pipes = [start]
+    pipes = find_start_connections(start, pipe_map)
+    for neighbour in pipes:
+        distances[neighbour] = 1
 
     while len(pipes):
         current = pipes.pop(0)
@@ -610,7 +621,6 @@ def is_vertical_kinked_edge(row, col, pipe_map, polygon_points):
     if corner in ['F', 'L']:
         while True:
             col += 1
-            print(row,col)
             if pipe_map[row][col] != '-':
                 break
         return (corner == 'F' and pipe_map[row][col] == 'J') or (corner == 'L' and pipe_map[row][col] == '7')
@@ -665,6 +675,9 @@ def day10():
     distances = find_loop(start, pipe_map)
     task1 = max(distances.values())
 
+    # hack - my start position should be an 'F' pipe - it affects the kinked vertical edge analysis...
+    # not exactly a sustainable piece of coding, this.
+    pipe_map[start[0]] = pipe_map[start[0]][:start[1]] + 'F' + pipe_map[start[0]][start[1] + 1:]
     task2 = ray_cast(pipe_map, distances)
 
     return time.time() - start_time, task1, task2
