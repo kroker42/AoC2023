@@ -3,7 +3,7 @@ import re
 import numpy
 import math
 import operator
-
+import itertools
 
 def match_digits(data):
     matches = {str(i): str(i) for i in range(1, 10)}
@@ -679,6 +679,74 @@ def day10():
     # not exactly a sustainable piece of coding, this.
     pipe_map[start[0]] = pipe_map[start[0]][:start[1]] + 'F' + pipe_map[start[0]][start[1] + 1:]
     task2 = ray_cast(pipe_map, distances)
+
+    return time.time() - start_time, task1, task2
+
+##############
+
+
+def parse_galaxies(data):
+    galaxies = []
+    for row in range(len(data)):
+        for col in range(len(data[0])):
+            if data[row][col] == '#':
+                galaxies.append([row, col])
+    return galaxies
+
+
+def find_empty_rows(data):
+    empty_rows = []
+    for row in range(len(data)):
+        if data[row].count('#') == 0:
+            empty_rows.append(row)
+    return empty_rows
+
+
+def find_empty_cols(data):
+    empty_cols = []
+    for col in range(len(data[0])):
+        empty = True
+        for row in range(len(data)):
+            empty = data[row][col] != '#'
+            if not empty:
+                break
+        if empty:
+            empty_cols.append(col)
+    return empty_cols
+
+
+def pad_galaxies(galaxies, empty_rows, empty_cols, factor=2):
+    padded_galaxies = [g.copy() for g in galaxies]
+
+    for row in reversed(empty_rows):
+        for g in padded_galaxies:
+            if g[0] > row:
+                g[0] += factor - 1
+
+    for col in reversed(empty_cols):
+        for g in padded_galaxies:
+            if g[1] > col:
+                g[1] += factor - 1
+
+    return padded_galaxies
+
+
+def get_distances(galaxies):
+    galaxy_pairs = itertools.combinations(galaxies, 2)
+    distances = [sum([abs(i) for i in numpy.subtract(p[0], p[1])]) for p in galaxy_pairs]
+    return distances
+
+
+def day11():
+    data = [line.strip() for line in open('input11.txt')]
+    start_time = time.time()
+
+    galaxies = parse_galaxies(data)
+    empty_rows = find_empty_rows(data)
+    empty_cols = find_empty_cols(data)
+
+    task1 = sum(get_distances(pad_galaxies(galaxies, empty_rows, empty_cols)))
+    task2 = sum(get_distances(pad_galaxies(galaxies, empty_rows, empty_cols, 1000000)))
 
     return time.time() - start_time, task1, task2
     

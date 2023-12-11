@@ -164,3 +164,38 @@ L7JLJL-JLJLJL--JLJ.L"""
         distances = elftasks.find_loop(start, pipe_map)
         self.assertEqual(10, elftasks.ray_cast(pipe_map, distances))
 
+
+
+###############
+
+
+class TestDay11(unittest.TestCase):
+    def test_task1(self):
+        data = """...#......
+.......#..
+#.........
+..........
+......#...
+.#........
+.........#
+..........
+.......#..
+#...#....."""
+        data = data.split('\n')
+        galaxies = elftasks.parse_galaxies(data)
+        empty_rows = elftasks.find_empty_rows(data)
+        empty_cols = elftasks.find_empty_cols(data)
+
+        small_galaxies = elftasks.pad_galaxies(galaxies, empty_rows, empty_cols)
+
+        self.assertEqual(True, [6, 1] in small_galaxies)
+        self.assertEqual(True, [7, 12] in small_galaxies)
+
+        distances = elftasks.get_distances(small_galaxies)
+        self.assertEqual(374, sum(distances))
+
+        big_galaxies = elftasks.pad_galaxies(galaxies, empty_rows, empty_cols, 10)
+        self.assertEqual(1030, sum(elftasks.get_distances(big_galaxies)))
+
+        bigger_galaxies = elftasks.pad_galaxies(galaxies, empty_rows, empty_cols, 100)
+        self.assertEqual(8410, sum(elftasks.get_distances(bigger_galaxies)))

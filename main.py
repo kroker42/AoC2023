@@ -45,9 +45,9 @@ def run_tests():
 if __name__ == '__main__':
     run_tests()
 
-#    day = str(date.today().day)
+    day = str(date.today().day)
     try:
-        run(eval("elftasks.day" + '10'))
+        run(eval("elftasks.day" + day))
     except AttributeError:
         generate_day("elftasks.py", day_fn, day)
         generate_day("test.py", day_test_case, day)
