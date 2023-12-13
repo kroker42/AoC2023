@@ -750,3 +750,41 @@ def day11():
 
     return time.time() - start_time, task1, task2
     
+
+##############
+
+def find_horizontal_mirror(data):
+    for i in range(len(data) - 1):
+        if (data[i] == data[i + 1]).all():
+            match = True
+            sz = min(i, len(data) - (i + 2))
+            for j in range(sz):
+                if not (data[i - 1 - j] == data[i + 2 + j]).all():
+                    match = False
+                    break
+            if match:
+                return i + 1
+    return 0
+
+
+def p_column(col):
+    print(col)
+
+def day13():
+    inp = open('input13.txt')
+    data = inp.read()
+    inp.close()
+    data = data.split('\n')
+
+    delims = [-1] + [i for i in range(len(data)) if data[i] == '']
+    patterns = [numpy.array([list(row) for row in data[i + 1: j]]) for i, j in zip(delims[:-1], delims[1:])]
+
+    start_time = time.time()
+
+    horizontal_mirrors = [find_horizontal_mirror(pattern) for pattern in patterns]
+    vertical_mirrors = [find_horizontal_mirror(pattern.T) for pattern in patterns]
+
+    task1 = 100 * sum(horizontal_mirrors) + sum(vertical_mirrors)
+    task2 = None
+
+    return time.time() - start_time, task1, task2

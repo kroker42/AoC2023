@@ -199,3 +199,30 @@ class TestDay11(unittest.TestCase):
 
         bigger_galaxies = elftasks.pad_galaxies(galaxies, empty_rows, empty_cols, 100)
         self.assertEqual(8410, sum(elftasks.get_distances(bigger_galaxies)))
+
+
+###############
+
+
+class TestDay13(unittest.TestCase):
+    def test_horizontal_mirror(self):
+        data = """#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#."""
+        pattern = numpy.array([list(row) for row in data.split('\n')])
+        self.assertEqual(0, elftasks.find_horizontal_mirror(pattern))
+
+        data = """#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#"""
+        pattern = numpy.array([list(row) for row in data.split('\n')])
+        self.assertEqual(4, elftasks.find_horizontal_mirror(pattern))
+
