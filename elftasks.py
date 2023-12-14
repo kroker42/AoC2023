@@ -753,7 +753,7 @@ def day11():
 
 ##############
 
-def find_horizontal_mirror(data):
+def find_unsmudged_mirror(data):
     for i in range(len(data) - 1):
         if (data[i] == data[i + 1]).all():
             match = True
@@ -766,9 +766,19 @@ def find_horizontal_mirror(data):
                 return i + 1
     return 0
 
+def find_smudged_mirror(data):
+    for i in range(len(data) - 1):
+        if (data[i] == data[i + 1]).all():
+            match = True
+            sz = min(i, len(data) - (i + 2))
+            for j in range(sz):
+                if (data[i - 1 - j] == data[i + 2 + j]).count_nonzero() < len(data[0]):
+                    match = False
+                    break
+            if match:
+                return i + 1
+    return 0
 
-def p_column(col):
-    print(col)
 
 def day13():
     inp = open('input13.txt')
@@ -781,10 +791,53 @@ def day13():
 
     start_time = time.time()
 
-    horizontal_mirrors = [find_horizontal_mirror(pattern) for pattern in patterns]
-    vertical_mirrors = [find_horizontal_mirror(pattern.T) for pattern in patterns]
+    horizontal_mirrors = [find_unsmudged_mirror(pattern) for pattern in patterns]
+    vertical_mirrors = [find_unsmudged_mirror(pattern.T) for pattern in patterns]
 
     task1 = 100 * sum(horizontal_mirrors) + sum(vertical_mirrors)
     task2 = None
 
     return time.time() - start_time, task1, task2
+
+
+##############
+
+def tilt_rocks_north(platform):
+    tilted = [list(row) for row in platform]
+    for col in range(len(platform[0])):
+        for row in range(1, len(platform)):
+            if tilted[row][col] == 'O':
+                for prev_row in reversed(range(row)):
+                    if tilted[prev_row][col] == '.':
+                        tilted[prev_row][col] = 'O'
+                        tilted[prev_row + 1][col] = '.'
+                    else:
+                        break
+    return tilted
+
+def calc_load(platform):
+    weight = len(platform)
+    load = 0
+    for i in range(len(platform)):
+        load += platform[i].count('O') * (weight - i)
+    return load
+
+def rotate_and_tilt(platform):
+    """ Tilt platform in N, W, S, E directions in turn, by rotating the array and tilting it."""
+    
+
+def day14():
+    data = [line.strip('\n') for line in open('input14.txt')]
+    print(data)
+
+    start_time = time.time()
+
+    platform = tilt_rocks_north(data)
+    print(platform)
+    task1 = calc_load(platform)
+    print(task1)
+    task2 = None
+
+    return time.time() - start_time, task1, task2
+
+

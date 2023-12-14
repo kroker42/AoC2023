@@ -205,7 +205,7 @@ class TestDay11(unittest.TestCase):
 
 
 class TestDay13(unittest.TestCase):
-    def test_horizontal_mirror(self):
+    def test_unsmudged_mirror(self):
         data = """#.##..##.
 ..#.##.#.
 ##......#
@@ -214,7 +214,7 @@ class TestDay13(unittest.TestCase):
 ..##..##.
 #.#.##.#."""
         pattern = numpy.array([list(row) for row in data.split('\n')])
-        self.assertEqual(0, elftasks.find_horizontal_mirror(pattern))
+        self.assertEqual(0, elftasks.find_unsmudged_mirror(pattern))
 
         data = """#...##..#
 #....#..#
@@ -224,5 +224,37 @@ class TestDay13(unittest.TestCase):
 ..##..###
 #....#..#"""
         pattern = numpy.array([list(row) for row in data.split('\n')])
-        self.assertEqual(4, elftasks.find_horizontal_mirror(pattern))
+        self.assertEqual(4, elftasks.find_unsmudged_mirror(pattern))
+
+
+
+###############
+
+
+class TestDay14(unittest.TestCase):
+    def test_task1(self):
+        data = """O....#....
+O.OO#....#
+.....##...
+OO.#O....O
+.O.....O#.
+O.#..O.#.#
+..O..#O..O
+.......O..
+#....###..
+#OO..#...."""
+        platform = [list(row) for row in data.split('\n')]
+        tilted_data = [list(row) for row in """OOOO.#.O..
+OO..#....#
+OO..O##..O
+O..#.OO...
+........#.
+..#....#.#
+..O..#.O.O
+..O.......
+#....###..
+#....#....""".split('\n')]
+        tilted_platform = elftasks.tilt_rocks_north(platform)
+        self.assertEqual(tilted_data, tilted_platform)
+        self.assertEqual(136, elftasks.calc_load(tilted_platform))
 
