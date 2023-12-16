@@ -243,8 +243,8 @@ O.#..O.#.#
 .......O..
 #....###..
 #OO..#...."""
-        platform = [list(row) for row in data.split('\n')]
-        tilted_data = [list(row) for row in """OOOO.#.O..
+        platform = numpy.array([list(row) for row in data.split('\n')])
+        tilted_data = numpy.array([list(row) for row in """OOOO.#.O..
 OO..#....#
 OO..O##..O
 O..#.OO...
@@ -253,8 +253,33 @@ O..#.OO...
 ..O..#.O.O
 ..O.......
 #....###..
-#....#....""".split('\n')]
-        tilted_platform = elftasks.tilt_rocks_north(platform)
-        self.assertEqual(tilted_data, tilted_platform)
+#....#....""".split('\n')])
+        tilted_platform = elftasks.tilt_rocks_north(platform.copy())
+        self.assertTrue((tilted_platform == tilted_data).all())
         self.assertEqual(136, elftasks.calc_load(tilted_platform))
+
+        for i in range(10):
+            elftasks.rotate_and_tilt(platform)
+
+
+###############
+
+
+class TestDay1(unittest.TestCase):
+    def test_hash(self):
+        self.assertEqual(52, elftasks.hash("HASH"))
+
+        data = "rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7".split(',')
+        self.assertEqual(1320, sum([elftasks.hash(x) for x in data]))
+
+        self.assertEqual(0, elftasks.hash("rn"))
+
+    def test_arrange_lenses(self):
+        data = "rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7".split(',')
+        lenses = elftasks.arrange_lenses(data)
+        self.assertEqual({'rn': 1, 'cm': 2}, lenses[0])
+        self.assertEqual({'ot': 7, 'ab': 5, 'pc': 6}, lenses[3])
+
+
+
 

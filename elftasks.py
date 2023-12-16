@@ -803,41 +803,110 @@ def day13():
 ##############
 
 def tilt_rocks_north(platform):
-    tilted = [list(row) for row in platform]
+    """Changes the platform array"""
+
     for col in range(len(platform[0])):
         for row in range(1, len(platform)):
-            if tilted[row][col] == 'O':
+            if platform[row][col] == 'O':
                 for prev_row in reversed(range(row)):
-                    if tilted[prev_row][col] == '.':
-                        tilted[prev_row][col] = 'O'
-                        tilted[prev_row + 1][col] = '.'
+                    if platform[prev_row][col] == '.':
+                        platform[prev_row][col] = 'O'
+                        platform[prev_row + 1][col] = '.'
                     else:
                         break
-    return tilted
+    return platform
 
 def calc_load(platform):
     weight = len(platform)
     load = 0
     for i in range(len(platform)):
-        load += platform[i].count('O') * (weight - i)
+        load += numpy.count_nonzero(platform[i] == 'O') * (weight - i)
     return load
 
 def rotate_and_tilt(platform):
     """ Tilt platform in N, W, S, E directions in turn, by rotating the array and tilting it."""
-    
+    tilt_rocks_north(platform)
+    tilt_rocks_north(platform.T)
+    tilt_rocks_north(numpy.flip(platform, 0))
+    tilt_rocks_north(numpy.flip(platform.T, 0))
+
 
 def day14():
     data = [line.strip('\n') for line in open('input14.txt')]
-    print(data)
+    platform = numpy.array([list(row) for row in data])
 
     start_time = time.time()
 
-    platform = tilt_rocks_north(data)
-    print(platform)
-    task1 = calc_load(platform)
-    print(task1)
-    task2 = None
+    task1 = calc_load(tilt_rocks_north(platform.copy()))
+
+    # the cycle is 77 rotations long
+    cycle_part = [86096,86085,86079,86071,86064,86082,86100,86106]
+    loads = [0] * 10000
+
+    for i in range(500):
+        rotate_and_tilt(platform)
+
+    for i in range(500, 10000):
+        rotate_and_tilt(platform)
+        loads[i] = calc_load(platform)
+        if loads[i-7:i+1] == cycle_part:
+            break
+    print(loads[500:600])
+
+    task2 = calc_load(platform)
 
     return time.time() - start_time, task1, task2
 
 
+
+##############
+
+def hash(str):
+    hash_value = 0
+    for ch in str:
+        hash_value += ord(ch)
+        hash_value = (hash_value * 17) % 256
+    return hash_value
+
+
+def parse_lens_instruction(instr):
+    if instr[-1] == '-':
+        return (instr[:-1], None)
+    else:
+        return (instr[:-2], int(instr[-1]))
+
+
+def arrange_lenses(instructions):
+    lenses = [{} for i in range(256)]
+    for instr in instructions:
+        label = parse_lens_instruction(instr)
+        hash_val = hash(label[0])
+        if label[1] == None:
+            lenses[hash_val].pop(label[0], None)
+        else:
+            lenses[hash_val][label[0]] = label[1]
+    return lenses
+
+
+def day15():
+    inp = open('input15.txt')
+    data = inp.read()
+    inp.close()
+    data = data.strip().split(',')
+
+    start_time = time.time()
+
+    task1 = sum([hash(x) for x in data])
+
+    boxes = arrange_lenses(data)
+
+    focus_powers = 0
+    for i in range(256):
+        lenses = list(boxes[i].values())
+        for l in range(len(lenses)):
+            focus_powers += (i + 1) * (l + 1) * lenses[l]
+
+    task2 = focus_powers
+
+    return time.time() - start_time, task1, task2
+    
