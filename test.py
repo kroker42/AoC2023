@@ -283,3 +283,87 @@ class TestDay1(unittest.TestCase):
 
 
 
+
+
+###############
+
+
+class TestDay16(unittest.TestCase):
+    def test_task1(self):
+        self.assertEqual(False, False)
+
+###############
+
+
+class TestDay17(unittest.TestCase):
+    data = """2413432311323
+3215453535623
+3255245654254
+3446585845452
+4546657867536
+1438598798454
+4457876987766
+3637877979653
+4654967986887
+4564679986453
+1224686865563
+2546548887735
+4322674655533""".split('\n')
+    data = [[int(x) for x in line] for line in data]
+
+    def test_finds_coords_within_grid(self):
+        paths = elftasks.Paths(self.data)
+
+        self.assertTrue(paths.in_grid((0, 0)))
+        self.assertTrue(paths.in_grid((0, 1)))
+        self.assertTrue(paths.in_grid((1, 1)))
+        self.assertTrue(paths.in_grid((12, 12)))
+        self.assertTrue(paths.in_grid((12, 11)))
+
+        self.assertFalse(paths.in_grid((12, 13)))
+        self.assertFalse(paths.in_grid((13, 12)))
+        self.assertFalse(paths.in_grid((12, -1)))
+        self.assertFalse(paths.in_grid((-1, 12)))
+        self.assertFalse(paths.in_grid((0, -1)))
+        self.assertFalse(paths.in_grid((-1, 0)))
+
+
+    def test_find_possible_directions_from_node(self):
+        paths = elftasks.Paths(self.data)
+
+        node = elftasks.Node((3, 4), 2, elftasks.Node((4, 4), 5))
+        self.assertEqual(1, node.step)
+        self.assertTrue(numpy.equal([(0, -1), (0, 1), (-1, 0)], paths.possible_directions(node)).all())
+
+        nodeN = elftasks.Node((2, 4), 2, node)
+        self.assertEqual(2, nodeN.step)
+        self.assertTrue(numpy.equal([(0, -1), (0, 1), (-1, 0)], paths.possible_directions(nodeN)).all())
+
+        nodeW = elftasks.Node((3, 3), 2, node)
+        self.assertEqual(1, nodeW.step)
+        self.assertTrue(numpy.equal([(-1, 0), (1, 0), (0, -1)], paths.possible_directions(nodeW)).all())
+
+        nodeWW = elftasks.Node((3, 2), 2, nodeW)
+        self.assertEqual(2, nodeWW.step)
+        self.assertTrue(numpy.equal([(-1, 0), (1, 0), (0, -1)], paths.possible_directions(nodeWW)).all())
+
+        nodeWWW = elftasks.Node((3, 1), 2, nodeWW)
+        self.assertEqual(3, nodeWWW.step)
+        self.assertTrue(numpy.equal([(-1, 0), (1, 0)], paths.possible_directions(nodeWWW)).all())
+
+
+    def test_is_origin(self):
+        paths = elftasks.Paths(self.data)
+        self.assertTrue(paths.is_origin(elftasks.Node((0, 0), 2)))
+        self.assertFalse(paths.is_origin(elftasks.Node((0, 1), 2)))
+
+    def test_find_shortest_path(self):
+        paths = elftasks.Paths(self.data)
+        shortest_path = paths.find_shortest_path()
+
+        # node = shortest_path
+        # while node:
+        #     print(node.index, node.path_length, node.step)
+        #     node = node.next_node
+
+        self.assertEqual(102, shortest_path.path_length)

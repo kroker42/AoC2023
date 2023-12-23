@@ -910,3 +910,119 @@ def day15():
 
     return time.time() - start_time, task1, task2
     
+
+##############
+
+def bounce_beam(mirrors):
+    energised = {(0, 0): 1}
+    next = [(0, 1)]
+    for beam in next:
+        Non
+
+
+
+
+def day16():
+    data = [line.strip() for line in open('input16.txt')]
+    start_time = time.time()
+
+    task1 = None
+    task2 = None
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+
+class Node:
+    def __init__(self, index, value, next_node=None):
+        self.index = index
+        self.next_node = next_node
+        if next_node:
+            self.path_length = value + next_node.path_length
+            self.next_direction = numpy.subtract(self.index, self.next_node.index)
+            self.step = next_node.step + 1 if numpy.equal(self.next_direction, next_node.next_direction).all() else 1
+        else:
+            self.path_length = value
+            self.next_direction = (0, 0)
+            self.step = 0
+
+
+class Paths:
+    def __init__(self, grid):
+        self.grid = grid
+        self.row_len = len(self.grid)
+        self.col_len = len(self.grid[0])
+        self.paths = {}
+
+    def add_path(self, node):
+        if node.path_length not in self.paths:
+            self.paths[node.path_length] = []
+
+        self.paths[node.path_length].append(node)
+
+    def in_grid(self, coords):
+        return numpy.greater_equal(coords, (0, 0)).all() and \
+                not numpy.greater_equal(coords, (self.row_len, self.col_len)).any()
+
+    def possible_directions(self, node):
+        """
+        It's possible to turn 90 degrees in either direction, or continue straight on, but only for 3 steps.
+        It's not possible to turn around or walk diagonally.
+        It's not possible to walk outside the grid.
+        """
+
+        # 90-degree turns
+        candidates = [numpy.flip(node.next_direction),
+                      -numpy.flip(node.next_direction)]
+
+        # continue straight
+        if node.step < 3:
+            candidates.append(node.next_direction)
+
+        return [x for x in candidates if self.in_grid(numpy.add(node.index, x))]
+
+    def is_origin(self, node):
+        return numpy.equal(node.index, (0, 0)).all()
+
+    def create_new_paths(self, path):
+        coords = [numpy.add(path.index, direction) for direction in self.possible_directions(path)]
+        return [Node(index, self.grid[index[0]][index[1]], path) for index in coords]
+
+    def find_shortest_path(self):
+        """
+        find shortest path from top left to bottom right corner; using no more than 3 steps in a straight line.
+        don't count the number in the starting position.
+        """
+
+        goal = Node((self.row_len-1, self.col_len-1), self.grid[-1][-1])
+
+        self.add_path(Node((self.row_len-2, self.col_len-1), self.grid[-2][-1], goal))
+        self.add_path(Node((self.row_len-1, self.col_len-2), self.grid[-1][-2], goal))
+
+        while True:
+            shortest_path_len = min(self.paths.keys())
+
+            path = self.paths[shortest_path_len].pop(-1)
+            if not self.paths[shortest_path_len]:
+                self.paths.pop(shortest_path_len)
+
+            new_paths = self.create_new_paths(path)
+            for new_path in new_paths:
+                if self.is_origin(new_path):
+                    return path
+                self.add_path(new_path)
+
+
+def day17():
+    data = [[int(x) for x in line.strip()] for line in open('input17.txt')]
+    start_time = time.time()
+
+    paths = Paths(data)
+    shortest_path = paths.find_shortest_path()
+
+    task1 = shortest_path.path_length
+    task2 = None
+
+    return time.time() - start_time, task1, task2
+    
