@@ -371,3 +371,33 @@ class TestDay17(unittest.TestCase):
         paths = elftasks.Paths(self.data)
         shortest_path = paths.find_shortest_path()
         self.assertEqual(102, shortest_path.path_length)
+
+    def test_find_shortest_ultra_path(self):
+        paths = elftasks.Paths(self.data)
+        shortest_paths = paths.find_shortest_ultra_path()
+
+        shortest = shortest_paths[0].path_length
+        for path in shortest_paths:
+            if path.path_length < shortest:
+                shortest = path.path_length
+
+        self.assertEqual(94, shortest)
+
+    def test_find_ultra_path_small_map(self):
+        data = """111111111111
+999999999991
+999999999991
+999999999991
+999999999991""".split('\n')
+        data = [[int(x) for x in line] for line in data]
+        paths = elftasks.Paths(data)
+        shortest_paths = paths.find_shortest_ultra_path()
+        shortest_paths = [path for path in shortest_paths if path.step >= 4]
+
+        shortest = shortest_paths[0].path_length
+        for path in shortest_paths:
+            if path.path_length < shortest:
+                shortest = path.path_length
+
+        self.assertEqual(71, shortest)
+

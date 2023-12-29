@@ -984,6 +984,28 @@ class Paths:
         self.paths[estimated_path_length].append(node)
         self.encountered_nodes[node_index][prev_direction].append(node)
 
+    def add_ultra_path(self, node):
+        estimated_path_length = node.path_length
+
+        # if a different path has a shorter length to this node - stop here
+        node_index = tuple(node.index)
+        if node_index not in self.encountered_nodes:
+            self.encountered_nodes[node_index] = {}
+
+        prev_direction = tuple(node.prev_direction)
+        if prev_direction not in self.encountered_nodes[node_index]:
+            self.encountered_nodes[node_index][prev_direction] = []
+        else:
+            for path in self.encountered_nodes[node_index][prev_direction]:
+                if path.step == node.step and path.path_length <= node.path_length:
+                    return
+
+        if estimated_path_length not in self.paths:
+            self.paths[estimated_path_length] = []
+
+        self.paths[estimated_path_length].append(node)
+        self.encountered_nodes[node_index][prev_direction].append(node)
+
     def in_grid(self, coords):
         return numpy.greater_equal(coords, (0, 0)).all() and \
                 not numpy.greater_equal(coords, (self.num_rows, self.num_cols)).any()
@@ -1003,7 +1025,28 @@ class Paths:
         if node.step < 3:
             candidates.append(node.prev_direction)
 
-        return [x for x in candidates if self.in_grid(numpy.add(node.index, x)) and not node.visited(numpy.add(node.index, x))]
+        return [x for x in candidates if
+                self.in_grid(numpy.add(node.index, x)) and not node.visited(numpy.add(node.index, x))]
+
+    def possible_ultra_directions(self, node):
+        """
+        An ultra crucible *must* walk a minimum of 4 steps in a straight line.
+        It cannot walk more than 10 steps in one direction.
+        """
+
+        candidates = []
+
+        # 90-degree turns
+        if 4 <= node.step <= 10:
+            candidates = [numpy.flip(node.prev_direction),
+                          -numpy.flip(node.prev_direction)]
+
+        # continue straight
+        if node.step < 10:
+            candidates.append(node.prev_direction)
+
+        return [x for x in candidates if
+                self.in_grid(numpy.add(node.index, x)) and not node.visited(numpy.add(node.index, x))]
 
     def is_origin(self, node):
         return numpy.equal(node.index, (0, 0)).all()
@@ -1013,6 +1056,10 @@ class Paths:
 
     def create_new_paths(self, path):
         coords = [numpy.add(path.index, direction) for direction in self.possible_directions(path)]
+        return [Node(index, self.grid[index[0]][index[1]], path) for index in coords]
+
+    def create_new_ultra_paths(self, path):
+        coords = [numpy.add(path.index, direction) for direction in self.possible_ultra_directions(path)]
         return [Node(index, self.grid[index[0]][index[1]], path) for index in coords]
 
     def get_shortest_estimated_path(self):
@@ -1052,16 +1099,50 @@ class Paths:
 
         return shortest
 
+    def find_shortest_ultra_path(self):
+        """
+        find shortest path from top left to bottom right corner;
+        using no less than 4 and no more than 10 steps in a straight line.
+        don't count the number in the starting position.
+        """
+
+        src = Node((0, 0), 0)
+
+        self.add_ultra_path(Node((0, 1), self.grid[0][1], src))
+        self.add_ultra_path(Node((1, 0), self.grid[1][0], src))
+
+        while self.paths:
+            path = self.get_shortest_estimated_path()
+            new_paths = self.create_new_ultra_paths(path)
+
+            for new_path in new_paths:
+                if self.is_target(new_path):
+                    self.paths_to_target.append(new_path)
+                else:
+                    self.add_ultra_path(new_path)
+
+        return self.paths_to_target
 
 def day17():
     data = [[int(x) for x in line.strip()] for line in open('input17.txt')]
     start_time = time.time()
 
-    paths = Paths(data)
-    shortest_path = paths.find_shortest_path()
+    # shortest_path = Paths(data).find_shortest_path()
+    # task1 = shortest_path.path_length
 
-    task1 = shortest_path.path_length
-    task2 = None
+    shortest_paths = Paths(data).find_shortest_ultra_path()
+    shortest_paths = [path for path in shortest_paths if path.step >= 4]
 
-    return time.time() - start_time, task1, task2
+    shortest = shortest_paths[0].path_length
+    for path in shortest_paths:
+        if path.path_length < shortest:
+            shortest = path.path_length
+
+    task2 = shortest
+
+    return time.time() - start_time, None, task2
     
+
+##############
+
+
