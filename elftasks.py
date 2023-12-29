@@ -1127,8 +1127,8 @@ def day17():
     data = [[int(x) for x in line.strip()] for line in open('input17.txt')]
     start_time = time.time()
 
-    # shortest_path = Paths(data).find_shortest_path()
-    # task1 = shortest_path.path_length
+    shortest_path = Paths(data).find_shortest_path()
+    task1 = shortest_path.path_length
 
     shortest_paths = Paths(data).find_shortest_ultra_path()
     shortest_paths = [path for path in shortest_paths if path.step >= 4]
@@ -1140,7 +1140,7 @@ def day17():
 
     task2 = shortest
 
-    return time.time() - start_time, None, task2
+    return time.time() - start_time, task1, task2
     
 
 ##############
