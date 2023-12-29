@@ -333,7 +333,8 @@ class TestDay17(unittest.TestCase):
 
         node = elftasks.Node((3, 4), 2, elftasks.Node((4, 4), 5))
         self.assertEqual(1, node.step)
-        self.assertTrue(numpy.equal([(0, -1), (0, 1), (-1, 0)], paths.possible_directions(node)).all())
+        directions = paths.possible_directions(node)
+        self.assertTrue(numpy.equal([(0, -1), (0, 1), (-1, 0)], directions).all())
 
         nodeN = elftasks.Node((2, 4), 2, node)
         self.assertEqual(2, nodeN.step)
@@ -351,6 +352,15 @@ class TestDay17(unittest.TestCase):
         self.assertEqual(3, nodeWWW.step)
         self.assertTrue(numpy.equal([(-1, 0), (1, 0)], paths.possible_directions(nodeWWW)).all())
 
+    def test_find_possible_directions_from_edge_node(self):
+        paths = elftasks.Paths(self.data)
+        node = elftasks.Node((12, 2), 2, elftasks.Node((11, 2), 5))
+        self.assertEqual(1, node.step)
+        self.assertTrue(numpy.equal([(0, 1), (0, -1)], paths.possible_directions(node)).all())
+
+        node = elftasks.Node((12, 0), 2, elftasks.Node((11, 0), 5))
+        self.assertEqual(1, node.step)
+        self.assertTrue(numpy.equal([(0, 1)], paths.possible_directions(node)).all())
 
     def test_is_origin(self):
         paths = elftasks.Paths(self.data)
@@ -360,10 +370,4 @@ class TestDay17(unittest.TestCase):
     def test_find_shortest_path(self):
         paths = elftasks.Paths(self.data)
         shortest_path = paths.find_shortest_path()
-
-        # node = shortest_path
-        # while node:
-        #     print(node.index, node.path_length, node.step)
-        #     node = node.next_node
-
         self.assertEqual(102, shortest_path.path_length)

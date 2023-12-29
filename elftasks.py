@@ -935,35 +935,58 @@ def day16():
 ##############
 
 class Node:
-    def __init__(self, index, value, next_node=None):
+    def __init__(self, index, value, prev_node=None):
         self.index = index
-        self.next_node = next_node
-        if next_node:
-            self.path_length = value + next_node.path_length
-            self.next_direction = numpy.subtract(self.index, self.next_node.index)
-            self.step = next_node.step + 1 if numpy.equal(self.next_direction, next_node.next_direction).all() else 1
+        self.prev_node = prev_node
+        if prev_node:
+            self.path_length = value + prev_node.path_length
+            self.prev_direction = numpy.subtract(self.index, self.prev_node.index)
+            self.step = prev_node.step + 1 if numpy.equal(self.prev_direction, prev_node.prev_direction).all() else 1
+            self.prev_indices = {tuple(self.prev_node.index)}.union(self.prev_node.prev_indices)
         else:
             self.path_length = value
-            self.next_direction = (0, 0)
+            self.prev_direction = (0, 0)
             self.step = 0
+            self.prev_indices = set()
+
+    def visited(self, index):
+        return tuple(index) in self.prev_indices
 
 
 class Paths:
     def __init__(self, grid):
         self.grid = grid
-        self.row_len = len(self.grid)
-        self.col_len = len(self.grid[0])
+        self.num_rows = len(self.grid)
+        self.num_cols = len(self.grid[0])
         self.paths = {}
+        self.encountered_nodes = {}
+        self.paths_to_target = []
 
     def add_path(self, node):
-        if node.path_length not in self.paths:
-            self.paths[node.path_length] = []
+        estimated_path_length = node.path_length
 
-        self.paths[node.path_length].append(node)
+        # if a different path has a shorter length to this node - stop here
+        node_index = tuple(node.index)
+        if node_index not in self.encountered_nodes:
+            self.encountered_nodes[node_index] = {}
+
+        prev_direction = tuple(node.prev_direction)
+        if prev_direction in self.encountered_nodes[node_index]:
+            for path in self.encountered_nodes[node_index][prev_direction]:
+                if path.step <= node.step and path.path_length <= node.path_length:
+                    return
+        else:
+            self.encountered_nodes[node_index][prev_direction] = []
+
+        if estimated_path_length not in self.paths:
+            self.paths[estimated_path_length] = []
+
+        self.paths[estimated_path_length].append(node)
+        self.encountered_nodes[node_index][prev_direction].append(node)
 
     def in_grid(self, coords):
         return numpy.greater_equal(coords, (0, 0)).all() and \
-                not numpy.greater_equal(coords, (self.row_len, self.col_len)).any()
+                not numpy.greater_equal(coords, (self.num_rows, self.num_cols)).any()
 
     def possible_directions(self, node):
         """
@@ -973,21 +996,33 @@ class Paths:
         """
 
         # 90-degree turns
-        candidates = [numpy.flip(node.next_direction),
-                      -numpy.flip(node.next_direction)]
+        candidates = [numpy.flip(node.prev_direction),
+                      -numpy.flip(node.prev_direction)]
 
         # continue straight
         if node.step < 3:
-            candidates.append(node.next_direction)
+            candidates.append(node.prev_direction)
 
-        return [x for x in candidates if self.in_grid(numpy.add(node.index, x))]
+        return [x for x in candidates if self.in_grid(numpy.add(node.index, x)) and not node.visited(numpy.add(node.index, x))]
 
     def is_origin(self, node):
         return numpy.equal(node.index, (0, 0)).all()
 
+    def is_target(self, node):
+        return numpy.equal(node.index, (self.num_rows - 1, self.num_cols - 1)).all()
+
     def create_new_paths(self, path):
         coords = [numpy.add(path.index, direction) for direction in self.possible_directions(path)]
         return [Node(index, self.grid[index[0]][index[1]], path) for index in coords]
+
+    def get_shortest_estimated_path(self):
+        shortest_estimated_path_len = min(self.paths.keys())
+        path = self.paths[shortest_estimated_path_len].pop(-1)
+
+        if not self.paths[shortest_estimated_path_len]:
+            self.paths.pop(shortest_estimated_path_len)
+
+        return path
 
     def find_shortest_path(self):
         """
@@ -995,23 +1030,27 @@ class Paths:
         don't count the number in the starting position.
         """
 
-        goal = Node((self.row_len-1, self.col_len-1), self.grid[-1][-1])
+        src = Node((0, 0), 0)
 
-        self.add_path(Node((self.row_len-2, self.col_len-1), self.grid[-2][-1], goal))
-        self.add_path(Node((self.row_len-1, self.col_len-2), self.grid[-1][-2], goal))
+        self.add_path(Node((0, 1), self.grid[0][1], src))
+        self.add_path(Node((1, 0), self.grid[1][0], src))
 
-        while True:
-            shortest_path_len = min(self.paths.keys())
-
-            path = self.paths[shortest_path_len].pop(-1)
-            if not self.paths[shortest_path_len]:
-                self.paths.pop(shortest_path_len)
-
+        while self.paths:
+            path = self.get_shortest_estimated_path()
             new_paths = self.create_new_paths(path)
+
             for new_path in new_paths:
-                if self.is_origin(new_path):
-                    return path
-                self.add_path(new_path)
+                if self.is_target(new_path):
+                    self.paths_to_target.append(new_path)
+                else:
+                    self.add_path(new_path)
+
+        shortest = self.paths_to_target[0]
+        for path in self.paths_to_target:
+            if path.path_length < shortest.path_length:
+                shortest = path
+
+        return shortest
 
 
 def day17():
