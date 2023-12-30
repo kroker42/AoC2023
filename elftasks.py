@@ -970,9 +970,22 @@ def day16():
 
     beamer = Day16(data)
     lit_squares = beamer.start_beam((0, -1), (0, 1))
-
     task1 = len(lit_squares)
-    task2 = None
+
+    energised_squares = []
+    for row in range(beamer.num_rows):
+        lit_squares = beamer.start_beam((row, -1), (0, 1))
+        energised_squares.append(len(lit_squares))
+        lit_squares = beamer.start_beam((row, beamer.num_cols), (0, -1))
+        energised_squares.append(len(lit_squares))
+
+    for col in range(beamer.num_cols):
+        lit_squares = beamer.start_beam((-1, col), (1, 0))
+        energised_squares.append(len(lit_squares))
+        lit_squares = beamer.start_beam((beamer.num_rows, col), (-1, 0))
+        energised_squares.append(len(lit_squares))
+
+    task2 = max(energised_squares)
 
     return time.time() - start_time, task1, task2
     
