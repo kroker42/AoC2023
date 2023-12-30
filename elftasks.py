@@ -913,26 +913,72 @@ def day15():
 
 ##############
 
-def bounce_beam(mirrors):
-    energised = {(0, 0): 1}
-    next = [(0, 1)]
-    for beam in next:
-        Non
+def is_horizontal(direction):
+    return direction[0] == 0
 
 
+class Day16:
+    def __init__(self, grid):
+        self.grid = grid
+        self.num_rows = len(grid)
+        self.num_cols = len(grid[0])
+
+    def is_in_grid(self, coords):
+        return 0 <= coords[0] < self.num_rows and 0 <= coords[1] < self.num_cols
+
+    def bounce_beam(self, beams, lit_squares):
+        coords, direction = beams.pop(0)
+        next_coords = tuple(numpy.add(coords, direction))
+
+        if not self.is_in_grid(next_coords):
+            return
+
+        if next_coords in lit_squares and direction in lit_squares[next_coords]:
+            return
+
+        if next_coords not in lit_squares:
+            lit_squares[next_coords] = {direction}
+
+        lit_squares[next_coords].add(direction)
+
+        if self.grid[next_coords[0]][next_coords[1]] == '/':
+            beams.append((next_coords, tuple(-numpy.flip(direction))))
+        elif self.grid[next_coords[0]][next_coords[1]] == '\\':
+            beams.append((next_coords, tuple(numpy.flip(direction))))
+        elif is_horizontal(direction) and self.grid[next_coords[0]][next_coords[1]] == '|':
+            beams.append((next_coords, (1, 0)))
+            beams.append((next_coords, (-1, 0)))
+        elif (not is_horizontal(direction)) and self.grid[next_coords[0]][next_coords[1]] == '-':
+            beams.append((next_coords, (0, 1)))
+            beams.append((next_coords, (0, -1)))
+        else:
+            beams.append((next_coords, direction))
+
+    def start_beam(self, start, direction):
+        beams = [(start, direction)]
+        lit_squares = {}
+
+        while beams:
+            self.bounce_beam(beams, lit_squares)
+
+        return lit_squares
 
 
 def day16():
     data = [line.strip() for line in open('input16.txt')]
     start_time = time.time()
 
-    task1 = None
+    beamer = Day16(data)
+    lit_squares = beamer.start_beam((0, -1), (0, 1))
+
+    task1 = len(lit_squares)
     task2 = None
 
     return time.time() - start_time, task1, task2
     
 
 ##############
+
 
 class Node:
     def __init__(self, index, value, prev_node=None):

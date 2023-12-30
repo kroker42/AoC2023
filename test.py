@@ -289,8 +289,135 @@ class TestDay1(unittest.TestCase):
 
 
 class TestDay16(unittest.TestCase):
+    grid = """.|...\\....
+|.-.\\.....
+.....|-...
+........|.
+..........
+.........\\
+..../.\\\\..
+.-.-/..|..
+.|....-|.\\
+..//.|....""".split('\n')
+
+    def test_is_horizontal(self):
+        self.assertTrue(elftasks.is_horizontal((0, 1)))
+        self.assertTrue(elftasks.is_horizontal((0, -1)))
+        self.assertFalse(elftasks.is_horizontal((1, 0)))
+        self.assertFalse(elftasks.is_horizontal((-1, 0)))
+
+    def test_bounce_beam(self):
+        beamer = elftasks.Day16(self.grid)
+
+        # -> .
+        beams = [((0, -1), (0, 1))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((0, 0), (0, 1)), beams[0])
+
+        # -> |
+        beams = [((0, 0), (0, 1))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((0, 1), (1, 0)), beams[-2])
+        self.assertEqual(((0, 1), (-1, 0)), beams[-1])
+
+        # | <-
+        beams = [((2, 6), (0, -1))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((2, 5), (1, 0)), beams[-2])
+        self.assertEqual(((2, 5), (-1, 0)), beams[-1])
+
+        # |
+        # ^
+        # |
+        beams = [((3, 5), (-1, 0))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((2, 5), (-1, 0)), beams[-1])
+
+        # |
+        # v
+        # |
+        beams = [((1, 5), (1, 0))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((2, 5), (1, 0)), beams[-1])
+
+        # |
+        # v
+        # -
+        beams = [((6, 1), (1, 0))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((7, 1), (0, 1)), beams[-2])
+        self.assertEqual(((7, 1), (0, -1)), beams[-1])
+
+        # -
+        # ^
+        # |
+        beams = [((8, 1), (-1, 0))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((7, 1), (0, 1)), beams[-2])
+        self.assertEqual(((7, 1), (0, -1)), beams[-1])
+
+        # -> - <-
+        beams = [((1, 1), (0, 1))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((1, 2), (0, 1)), beams[-1])
+        beams = [((1, 3), (0, -1))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((1, 2), (0, -1)), beams[-1])
+
+        # -> \
+        beams = [((0, 4), (0, 1))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((0, 5), (1, 0)), beams[-1])
+
+        # \ <-
+        beams = [((0, 6), (0, -1))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((0, 5), (-1, 0)), beams[-1])
+
+        # |
+        # v
+        # \
+        beams = [((0, 4), (1, 0))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((1, 4), (0, 1)), beams[-1])
+
+        # \
+        # ^
+        # |
+        beams = [((2, 4), (-1, 0))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((1, 4), (0, -1)), beams[-1])
+
+        # -> /
+        beams = [((6, 3), (0, 1))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((6, 4), (-1, 0)), beams[-1])
+
+        # \ <-
+        beams = [((6, 5), (0, -1))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((6, 4), (1, 0)), beams[-1])
+
+        # |
+        # v
+        # /
+        beams = [((5, 4), (1, 0))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((6, 4), (0, -1)), beams[-1])
+
+        # /
+        # ^
+        # |
+        beams = [((7, 4), (-1, 0))]
+        beamer.bounce_beam(beams, {})
+        self.assertEqual(((6, 4), (0, 1)), beams[-1])
+
     def test_task1(self):
-        self.assertEqual(False, False)
+        beamer = elftasks.Day16(self.grid)
+        lit_squares = beamer.start_beam((0, -1), (0, 1))
+
+
+        self.assertEqual(46, len(lit_squares))
 
 ###############
 
